@@ -1,0 +1,29 @@
+current page: 49 
+
+WSO2 Data Service Server = exposes data from different resources
+
+WSO2 Message Broker = uses the publish/subscribe model to send messages to different parts
+
+WSO2 Business Process Server = bussiness process engine, stands for higher level of abstraction called BPM (Bussiness Process Management)
+which stands for discover, model, analyze, measure, improve and optimize business strategy and processes.
+
+WSO2 has also the UDDI registry called WSO2 Governance Registry, 
+
+WSO2 Application Server is a Java application container for web applications also called Carbon Platform
+
+UDDI is often compared to a telephone book's white, yellow, and green pages. The project allows businesses to list themselves by name, product, location, or the Web services they offer. Microsoft, IBM, and Ariba spearheaded UDDI. The project now includes 130 companies,
+
+the latest component called WSO2 EI 6 is an all encompasing version of WSO2 in which all the services are encapsulated in this.
+
+Wso2 Update Manage is preferred way to update and install applications, can be done manually too
+
+WSO2 EI consists of:
+
+- WSO2 ESB
+- WSO2 DataService Server
+- WSO2 Application Server
+- WSO2 Analytics
+- WSO2 Business PRocess
+- WSO2 Message Broker
+
+in here the first three are combined in one group also called WSO2 EI
