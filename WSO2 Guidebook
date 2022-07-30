@@ -27,3 +27,87 @@ WSO2 EI consists of:
 - WSO2 Message Broker
 
 in here the first three are combined in one group also called WSO2 EI
+
+- to make use of EI you need to install the java jdk environment variable to the bin
+
+- WUM is the Wso2 Update Manager which allows you to update and install apps, now depricated and replaced by WSO2 updater 2.0
+
+- to start the EI you should go to <WSO2EI_Home>/bin this is the installation folder  C:\Program Files\WSO2\EnterpriseIntegrator\6.6.0\  and execute the following commands
+on linux sh integrator.sh
+on windows integrator.bat --run
+
+- Management Console URL = https://192.168.0.163:8243/carbon for people which want to access it from the internet, from the host of the Enterprise Integrator it should be differen it should be localhost dependant on the version e.g:
+
+WSO2 EI 6.0.0 : https://localhost:8243/carbon
+
+WSO2 EI 6.1.0 : https://localhost:9443/carbon
+
+EI has a standard certificate for the https request which is not signed yet but good enough for test purposes
+
+the default username and password are : admin
+
+to stop the EI do the following:
+
+- windows: type ctrl+C
+
+- linux sh integrator.sh stop
+
+- to start analytics go in the command prompt to <EI_HOME>/wso2/analytics/bin
+
+- type in sh integrator.sh or integrator.bat --run dependant on the environment
+
+- same thing with the url but with a different port e.g: https://localhost:9444/carbon
+
+- sign in with the admin credentials
+
+- closing is the same way as with the EI
+
+- for the WSO2 EI Business Process you need to start it by going with the command prompt to 
+<EI_HOME>/wso2/business-process/bin
+
+- the starting command differs as this is sh.wso2server.sh on linux and wso2server.bat for windows
+
+- the port differs for this program as this is https://localhost:9445/carbon
+
+- sign in with the admin credentials
+
+- to start the WSO2 Broker go to  <EI_HOME>/wso2/broker/bin in the console
+
+- to start the server run the commands sh.wso2server.sh for linux
+and wso2server.bat for 
+
+- the url https://localhost:9446/carbon is the general url you will get
+
+- to close you can type ctrl c for windows or sh wso2server.sh from the given location
+
+- to start all four components go via the command prompt to <EI_HOME>/bin directory
+type in the following for Linux shstart-all.sh and for windows shooce start-all.bat
+all the processes will have  a 10 second gap inbetween the starting of it
+
+- transports are like enabling to process files or send mails,
+we can enable these transports in the axis2.xml file which recides in <EI_HOME>/conf/axis2/axis2.xml
+the input transports are transportReciever XML tag while the output transports are named transportSender
+
+-Message formatters and Message builders allow us to send and recieve different types of messages
+the Message builder is meant to process incoming messages
+and the message formatter are used to build outgoing messages
+we can change the settings in the axis2 file, most configurations are already given but commented out
+it may look like this 
+<messageformatter contenttype="application/json" class="org.apache.axis2.json.JSONMessageFormatter"></messageformatter>
+
+- projects are also called carbon projects
+
+- the following three have all their own project structure, called ESB enterprise Service Bys,DSS Data Services and BPS Business Process Server
+
+most used projects are:
+- ESBConfig = has all the artifacts related to the functionality of an ESB
+- Registry Resource Project = contains XSLT's WSLD ,XSD and and more
+- Data Service Project = needed when data needs to be stored and analyzed
+- Composite application project = this genereates the deployable artifacts, it allows you to select which artifacts would get added to the composite application Project that will be deployed
+- ESB Solution Project = wizard allows to create commmon projects 
+
+when a new ESb projects is created you can choose to choose the next artifacts.
+- Proxy service = this is to create any service different from the REST services like SOAP and JMS(Java Message Serice)
+- REST API: to create REST API's
+- Sequences: allow us to structure service flow in little pieces so the code will be more readable
+- Endpoints: the destination we can send messages to
