@@ -1,4 +1,4 @@
-current page: 49 
+current page: 99
 
 WSO2 Data Service Server = exposes data from different resources
 
@@ -111,3 +111,85 @@ when a new ESb projects is created you can choose to choose the next artifacts.
 - REST API: to create REST API's
 - Sequences: allow us to structure service flow in little pieces so the code will be more readable
 - Endpoints: the destination we can send messages to
+
+- when creating aproxy you can fill in the name and types as following:
+- Pass Trough Proxy: the service sends information to the endpoint without any processing, has a generic WSDL
+- Custom Proxy:choose this if all the other templates do not coincide
+- transform Proxy: transforms message to XSL(Extensible Stylesheet Language), can be done during income flow or prior to sending to the backend
+-Log Forward Proxy: same as pass trough proxy but with the option to log the message sent and recieved
+- WSDL Based Proxy: like pass trough proxy but it allows you to set the WSDL for it 
+- Secure Proxy: like pass trough proxy but with the ability to secure it using a secure policy
+
+- a proxy has three parts:
+ - in flow sequence = we place logic that processes incoming messages
+ - out flow sequence = logic for outcoming messages, these are the responses recieved from an endpoint
+ - Fault flow sequence - Here, we implement the behavior that would be triggered during the flow
+
+ - when creating a REST API you have the next options:
+  - name = naming of the API
+  - Context = root context e.g nnv will be http://localhost:8280/nnv, it must start with /
+  - Host name = filters host which can invoke the API, when empty everyone can use it
+  - Save location: choose the ESBPRoject in which it is stored
+
+- REST API's have the same structure as proxyies, as they have in, out and fault sequences
+
+- To Create a Sqeuence you can click on the Sequence map and create it
+the mandatory options are the name and project to save in
+
+- the advanced options exist of:
+ - Error Sequence = shows which sequence should be executed during an error, if not chosen the proxy which uses this sequence will be executed
+ - Available Endpoints = select a default endpoint to send the message.
+ - Dynamix sequence, this option allows the sequence will be stored in the registry, which of two locations are possible, the Configuration and Governance map
+configuration are shared by all WSO2 nodes in a cluster and the governance aer shared by all wso2 products of our environment
+
+when creating an endpoint you have the option to fill in the following
+- name = name
+- type = type of endpoint choses, mostly used is the Address Endpoint
+- static vs dynamic= dynamic stores endpoint in the registry
+- save = where to save
+
+- Registry Resource = provides useful functionality scuh as message validation or XSL transformation
+- WSDL and XML Schema Definition files require the proxy WSDL to be uploaded to the registry
+
+- when adding a new resource we have multiple options:
+ - from existing template: this helps us to create a resource starting from a WSDL or XSD template
+ - import from the system: this is for when you have the resource already or given
+ - Import registry dump file from file system: this will load package with the registry content, only when you don't have e.g: acces to the product registry
+ - Check-out from registry : this option allows you to connect the registry over which you will run your service so that you can work with the target directly
+
+ - when adding a resource from an existing template you must follow the following
+  - Resource Name: Name
+  - Templates: most commonly used are WSDL,XSD and XSL
+  - Registry: choose gov or conf 
+  - Registry path: here we type the path
+  - save resource in: here we hoose a Registry project to save the resources in
+
+ - when import from file system is chosen:
+  - the given options are the next:
+  - from file: here we can browse to a file or folder
+  - Artifact name: Name
+  - Registry: choose conf or gov
+  - Registry path to deploy: folder where the resource will be located
+  - Save resource in: here we choose the Registry Project where we add the resources
+
+
+- Data Service Project allows you to talk to multiple data sources
+to create it click on Data Service PRoject at the starting page and fill in all the necessary information 
+- Data Service Name: name
+- Data Service Group: can be left blank, is used for grouping data services
+- Data Service Namespace: Namespace
+- Description: Description
+- Save Data Service in : where to store data service
+- click next
+- Data Source Id: the name
+- Data Source Type: most used is Carbon Data Source
+- Data Source Name: name of the data source
+
+- Composite Application Project will used to generate deployable artifacts, can check which artifacts inside the same workspace to combine into the Carbon Application aRchive (CAR)
+
+- double click on pom.xml to check the artifacts which you want to deploy
+
+- under the dependencies bar you can choose the server role, default is Governance Registry when governance registry is not used set the role as EnterpriseServiceBus
+
+- the car file can be deployed to the server by opening WSO2EI managament console/dashboard go to Main under Carbon Applications add the car file inside the console you can see if it was succesfull or not
+
