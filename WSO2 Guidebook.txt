@@ -1,4 +1,4 @@
-current page: 99
+current page: 131
 
 WSO2 Data Service Server = exposes data from different resources
 
@@ -192,4 +192,142 @@ to create it click on Data Service PRoject at the starting page and fill in all 
 - under the dependencies bar you can choose the server role, default is Governance Registry when governance registry is not used set the role as EnterpriseServiceBus
 
 - the car file can be deployed to the server by opening WSO2EI managament console/dashboard go to Main under Carbon Applications add the car file inside the console you can see if it was succesfull or not
+
+
+- when creating an ESB Solution Project you have the choice of the following projects to be created at once
+ - ESBConfig Project (required)
+ - Registry Resource Project (Optional)
+ - Composite Application Project (Optional)
+ - Connector Exporter Project (Optional)
+
+to start the WSO2EI in debug mode you should start the service trough the following command integrator.bat --run -Desb.debug=true for windows
+and shintegrator.sh -Desb.debug=true
+
+- breakpoint can be set at each mediator where to pause the application
+
+- Message envelope shows all the raw envelope data
+
+- variables window shows all variable values
+
+- Data Mapping can be done trough multiple generally used integration patterns like, it involves converting, trabslating and transforming data from one data format to another:
+ - Message Translator = change input to other output
+ - Normalizer = router sending multiple source incomes to the right translator depending on the source
+ - Canonical Data Model = create a data model which is a superset of all others and create a translator layer after it
+
+the Data Mapper Mediator uses the next three things:
+ - Input Schema File: XML or JSON Input file
+ - Output Schema file
+ - Mapping configuration file: Javascript file that has information about how the translation takes place
+
+double click on your DataMapper Mediator and create new project
+- in Load Input choose input type and the file to load in
+- right click on output box and choose add new root
+- right click on response and click on addfield, type should be string name should be yousay
+- follow the image as following
+- image 1.png
+
+there are multiple entrypoints which exist of the following:
+- proxy acts as a virtual service recieves messages and mediates them before sending them to the endpoint
+- Main sequence default sequence for all messages not sent to a proxy service
+- API uses REST
+- Inbound Endpoint: a message source that can be configured manually
+- Task: scheduled jobs to execute proxy service or a named sequence
+
+when we create a service it's necessary to configure the following:
+- Transport: Carry the payload in a specific format
+- Mediators: message processing units
+- Sequences: List of Mediators executed Sequentially
+- Endpoints:Define distonation for current payload
+
+a property is a variable that stores some information during a time that depends on the scope it has configured
+written as 
+<property name="string" [action=set|remove] [type="string"] value="literal">
+ <xml-element/>?
+</property>
+
+there are three different types of properties:
+ - static:
+   <property name="color" value="red" />
+ - Dynamic:
+  from an xpath expression:
+   <property name="dynamic1" expression="//xpath"/>
+  from any other property:
+   <property name="dynamic2" expression="get-property('dynamic1')"/>
+  - Action:
+   <property name="To" action="remove"/>
+
+   these properties can have seven different scopes:
+   - Axis2: shortest scope and is only used to send parameters to Axis2 engine
+   - Synapse: The property will live in the same sequence; it's the default scope
+   - Axis-client: same duration as synapse, but the property can be read trough custom Mediators
+   - Operation: it's the largest scope; the property will live until the end of the service trough the different sequences
+   - Registry: used to get properties from the registry
+   - System: get Java system properties
+   - Transport: the property will be sent as a transport header
+
+   Logging a property is done as follows:
+    <log [level="string"] [seperator="string"]>
+     <property name="string" (value="literal" | expression="[XPath|json-eval(JSON Path)]")/>
+     </log>
+
+     There are six Categories of logging:
+     - TRACE
+     - DEBUG
+     - INFO
+     - WARN
+     - ERROR
+     - FATAL
+
+     there also four levels of logging:
+
+     - Custom: Show the properties configured inside the element
+     - Full: shows the Show To, From, WSAction, SOAPAction, ReplyTo, and MEssageID headers and the current payload
+     - headers: Log all the SOAP headers
+     - Simple: Log To, From, WSAction, SOAPActionm ReplyTo and MessageID headers
+
+     by default the log is placed at <WSO2_HOME>/repository/log/wso2carbon.log
+
+     - there are multiple types of send mediators, when in the out sequence it will call the calling client 
+     - when the <send/> mediator is used with not further information it will use the given implicit endpoint
+     - inline definition is as shown
+     <send>
+      <endpoint>
+       <address uri="http://localhost:8280/services/"
+      </endpoint>
+     </send>
+     - with a named endpoint is shown below
+     <send recieve="OutSequence">
+      <endpoint key="CreditEPR"/>
+     </send>
+
+     The Respond mediator stops the current message and sends the payload back to the requesting client
+     written as 
+     <respond/>
+
+     The loopback mediator moves the current message to the out sequence
+     written as
+     <loopback/>
+
+     The Drop Mediator stops processing the current message, only when configured inside the sequence sends an HTTP 202 accepted response to the client
+     written as
+     <drop/>
+
+     The Sequence mediator throws the processing of the named sequence or registry sequence
+     named sequence goes as the following:
+     <sequence key="namedSequence"/>
+     the registry sequence syntax is as follows:
+     <sequence key="conf:/path/to/registrySequence"/>
+
+     The script Mediator can use different scripting languages such as Javascript, Groovy and Ruby
+     inline script syntax starts as the following
+     <script language="js">
+     <![CDATA[
+      //script code
+     ]]
+     <script/>
+
+     registry script syntax starts as the following:
+     <script key="path/to/script" language="(js | groovy | rb) [function="nameOfTheFunction"]">
+      [<include key="string">]
+     <script/>
 
