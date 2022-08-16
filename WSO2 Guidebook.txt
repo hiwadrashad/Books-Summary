@@ -1,4 +1,4 @@
-current page: 131
+current page: 140
 
 WSO2 Data Service Server = exposes data from different resources
 
@@ -331,3 +331,74 @@ there are three different types of properties:
       [<include key="string">]
      <script/>
 
+     a sequence is triggered when there is no available axis2 services
+     
+     you can filter the incoming messages as the following
+
+     <filter regex="http://localhost:9000.*" source="get- property('To')">
+     <then>
+     </then>
+     <else>
+     <else/>
+     </filter>
+
+     the fault and in and out sequence are the generic options, it also is possible to create custom sequences by doing the following
+
+     <sequence name="string" [onError="string"][key="string"][trace="enable"][statistics="enable"]></sequence>
+
+     Onerror attribute sets the sequence that will be triggered when there's a problem during the processing of the seuence, instead of the default sequence
+
+     statistics to anble statistics collection which tracks number of messages proccesed and their processing times
+
+     trace enable trace collection in which the message will write ttracing information trough each mediation step
+
+     the transformer proxy recieves the request and then applies a transformation using the XSLT language before sending it to the backend service, it can also
+     change the backend response before sending it back to the client
+
+     a secure proxy applies the WS-Security Standard security on a non scure backend to mae it more secure
+
+     WSDL Based proxy is used when you already have the wsdl
+
+     Logging Proxy is similar to a pass trough proxy but it also has the ability to log all incoming and outgoing requests
+
+     simple proxy only gets the message and forwards it to the backend
+
+     custom proxies are for when there is need for a more complex type of proxie which doesn't fall in the previous Categories
+     you have to configure the in out and fault sequence the endpoints, transport etc.
+
+     API's are used as REST instead os SOAP, API's are simpler to develop and have better performance and scalability
+
+     <api name="API_NAME" context="URI_PATH_OF_API" [hostname="HOST_NAME_OF_SERVER][port="PORT"]>
+      <resource [methods="GET|POST|PUT|DELETE|OPTIONS|HEAD|PATCH"] [uri-template="URI_TEMPLATE"|url-mapping="URL_MAPPING"]/>
+    
+    you either choose the uri-template or url-mapping as your standard
+
+    when choosing a url mapping you have three types of patterns you can choose e.g:
+    - Path Mapping: all the paths which start with: /resource/*
+    - Extension mappings: only the requests starting with the extensions will be listened to:  *.jag
+    - Exact mappings: only the requests with the exact mapping will be listened too: /resource
+
+    to read the incoming parameters you can use the following:
+    - POST: json-eval($.nameParameter)
+    - GET: $ctx:query.param.nameParameter
+
+    example is:
+    <api context=/urlmappingapi>
+    <resource methods="GET" url-mapping="/getParam">
+    <InSequence>
+    <property name="Value of GET param" expression="$ctx:query.param.param"/>
+    <InSequence/>
+    <resource/>
+
+    input = http://localhost:8280/urlmappingapi/getParam?param-getParam
+
+    <api context=/urlmappingapi>
+    <resource methods="POST" url-mapping="/postParam"
+    <inSequence>
+     <property name="Value of POSt param" expression="json-eval($.param)">
+    </inSequence>
+
+    input =
+    curl -H "Content-Type: application/json" -X POST
+    -d {"param":"postParam"}
+    http://localhost:8280/urlmappingapi/postParam 
