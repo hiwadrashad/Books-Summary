@@ -1,4 +1,4 @@
-current page: 212
+current page: 214
 
 WSO2 Data Service Server = exposes data from different resources
 
@@ -807,4 +807,31 @@ the same can be done for a specific path over a JSON schema or a complete JSON p
 
 below is the syntax
 
-<validate
+<validate [source="JSONPath"]>
+ [<resource location="string" key="string"/>+]
+ <schema key="string">+
+ <on-fail>
+  mediator+
+  </on-fail>
+  </validate>
+
+- here Source is the JSONPath expression for the message to evaluate. when it is not configured, all of the payload will be evaluated
+- the resources include other files needed for the schema file
+- schema references the JSON file for validating the message
+- the on-fail tag as the mediator to execute in case the message is not correct
+
+Following the previous content the implementation would be the next
+
+<validate source="json-eval($.rootElement)">
+<schema key="conf:/JSONSchema.json"/>
+<on-fail>
+<log level="custom"
+ <property name="ERROR" value="Invalid Request"/>
+</log>
+<payloadFactory media-type="json">
+<format>{"Error":"Invalid Request"}</format>
+</payloadFactory>
+<property name="HTTP_SC" value="500" scope="axis2"/>
+<respond/>
+</on-fail>
+</validate>
