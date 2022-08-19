@@ -1,4 +1,4 @@
-current page: 214
+current page: 248
 
 WSO2 Data Service Server = exposes data from different resources
 
@@ -835,3 +835,358 @@ Following the previous content the implementation would be the next
 <respond/>
 </on-fail>
 </validate>
+
+Boolean fitering is done trough the filter mediator
+the syntax for it is the following
+
+<filter (source="[XPath|json-eval(JSONPath)]" regex="string") | xpath="[XPath | boolean]">
+ <then [sequence="string"]>
+  mediator+
+  </then>
+  <else [sequence="string"]>
+  mediator+
+  </else>
+</filter>
+
+one example is shown below here where the parameter value gets tested if it's a POST or not
+
+<filter xpath="boolean($axis2:HTTP_METHOD = 'POST')">
+ <then>
+  <log>
+   <property name="Method" value="POST"></property>
+  </log>
+  <property name="flightID" expression="json-eval($.flightID)"/>
+ </then>
+ <else>
+  <log>
+   <property name="Method" value="GET"></property>
+  </log>
+  <property name="flightID" expression="$ctx:query.param.flightID"/>
+ </else>
+
+it is also possible to execute a sequence written in the registry and without the else element as is shown below
+
+<filter source="boolean(get-property('flightID'))" regex="false">
+<then sequence="conf:/invalidParams"></filter>
+
+it is also possible to check for multiple parameters in the same filter mediator
+<filter source=""boolean(get-property('flightID'))" and boolean(get-property('date'))>
+
+when more than one cases need to be checked you will need to use a switch mediator
+the syntax should be done trough the following
+
+<switch source="[XPath|json-eval(JSON Path)]"
+ <case regex="string">
+  mediator+
+ </case>
+ <default>
+ mediator+
+ </default>
+</switch>
+
+using the switch mediator has performance improvements on the boolean when used for multiple clauses
+
+one example of a switch mediator is the following
+
+<switch source="//Country/name">
+ <case regex="Spain">
+  <property name="code" value="ES"/>
+ </case>
+ <case regex="UK">
+  <property name="code" value="GB"/>
+ </case>
+ <case regex="Germany">
+  <property name="code" value="DE"/>
+ </case
+ <default>
+  <property name="code" value="UKNOWN">
+ </default>
+
+ the conditional router mediator we can define different rules and throw a specific sequence to process this request
+
+ the syntax is as following
+
+ <conditionalRouter continueAfter="(true|false)">
+ <conditionalRoute breakRoute="(true|false)">
+  <condition/>
+  <target/>
+ </conditionalRoute>+
+ <conditionalRouter/>
+
+ continueAfter specifies if the routing must continue when a child route is executed
+ breakRoute configures whether a matching route will break the router
+ Target contains the name of the sequence to execute
+
+ an example is shown below how it works
+
+ <conditionalRouter conitinueAfter="false">
+ <conditionalRoute>
+  <condition>
+   <match xmlns="" type="url" regex="/flights/get.*"/>
+  </condition>
+  <target sequence="flights_IN_SEQ">
+ </conditionalRoute>
+ </conditionalRouter>
+
+it is also possible to have multiple parameters as shown below, where the headers get checked
+
+<conditionalRouter continueAfter="false">
+<conditionalRoute breakRoute="false">
+ <condition>
+  <and xmlns="">
+   <match type="url" regex="/flights/get.*"/>
+   <match type="header" source="company" regex="PacktAir"/>
+  </and>
+ </condition>
+ <target
+</conditionalRoute>
+</conditionalRouter>
+
+it is also possible to add an or clause which will execute even if the previouse and clause is not triggered
+
+<conditionalRouter continueAfter="false">
+ <conditionalRoute breakRoute="false">
+  <condition>
+   <and xmlns="">
+    <match type="url" regex="/flights/get.*"/>
+    <match type="header" source="company" regex="PacktAir"/>
+   </and>
+   <or>
+    <equal type="param" source="company" value="PacktAir"/>
+   </or>
+  </condition>
+  <target sequence="PacktAir_IN_SEQ"/>
+ <conditionalRoute>
+</conditionalRouter>
+
+below is shown a conditional router which has no sepcific header
+
+<conditionalRouter continueAfter="false">
+ <conditionalRoute breakRoute="false">
+  <condition>
+   <and xmlns="">
+    <match type="url" regex="/flights/get.*"/>
+    <match type="header" source="company" regex="PacktAir"/>
+   </and>
+   <or>
+    <equal type="param" source="company" value="PacktAir"/>
+   </or>
+   <not>
+    <equal type="param" source="next24Hr" value="false"/>
+   </not>
+  </condition>
+  <target sequence="PacktAir_IN_SEQ"/>
+ </conditionalRoute>
+</conditionalRouter>
+
+the rule mediator is similar to the conditional router only it has more options to manipulate the data with,
+
+the syntax goes as follows
+
+<rule>
+ <ruleset>
+  <source [key="xs:string"]>
+   [in-Lined]
+  </source>
+  <creation>
+   <property name="xs:string" value="xs:string"/>*
+  </creation>
+ </ruleset>
+
+<session type="[stateless|stateful]">*
+
+<facts>
+ <fact name="xs:string" type="xs:string"
+ expression="xs:string" value="xs:string"/>+
+</facts>
+
+<results>
+ <result name="xs:string" type="xs:string" expression="xs:string" value="xs:string"/>*
+</results>
+
+[
+  <childMediators>
+   <mediator/>*
+   </childMediators>
+]
+</ruleset>
+</rule>
+
+- Ruleset contains the list of rules to apply
+- the session configures the type of session 
+- the facts are sent by tje rule service client
+- the results is the information after applying the rules
+- the ChildMediators contains the logical to apply
+
+in the next example we will use the rule mediator to read the name of the country of the incoming request and then obtain the code with that country
+
+<rule xmlns="http://wso2.org/carbon/rules">
+ <source>soapBody</source>
+ <target action="replace" resultXpath="//country::text()">$country</target>
+ <ruleSet>
+  <properties/>
+  <rule resourceType="regular" sourceType="inline">
+  <![CDATA[
+    rule "Country ES" no-loop true
+    when
+     country:String()eval(country.equals("Spain"))
+     then
+       update(drools.getWorkingMemory().getFactHandle(country),"ES");
+       end
+
+       rule "Country GB" no-loop true
+       when
+         country: String()eval(country.equals("UK"))
+       then 
+         update(drools.getWorkingMemory().getFactHandle(country),"GB");
+       end
+
+       rule "Country DE" no-loop true
+
+       when
+       country: String()eval(country.equals("Germany"))
+       then
+       update(drools.getWorkingMemory().getFactHandle(country),"DE");
+       end
+
+
+  ]]
+ </ruleSet>
+ <input wrapperElementName="flights">
+  <fact elementName="country" type="java.lang.String" xpath="//country::text()"/>
+ </input>
+ <output wrapperElementName="flights">
+  <fact elementName="country" type="java.lang.String".>
+ </output>
+</rule>
+
+Security consist of the following:
+- Authentication = the act of veryfing that one user is really that user and is not trying to spoof another user
+- availability = the service must be available at for the user when needed
+- Confidentiality = the services are only available to the users who have the permissions to consume them
+- Integrity = the data cannot b modified in an unauthorized or undetected manner
+- Nonrepudiation = The Service consumer cannot deny having recieved a response or a request.
+
+throttling is the ability applying different policies to avoid heavy performance loads and restricting access to an IP adress
+
+Security
+===========================================
+
+- UsernameToken
+simplest and most used scenario in which the user sends the UsernameToken in the message and it's validated against the user stores in EI
+
+- Non-repudation
+this is done trough an X509 certificate in which the sender signs it with the private key, after which the reciever can check
+the client with it's public key
+
+- Integrity
+the client generates a symmetric key and sign the message with that key. Then, it encrypts the symmetric key with the service'same
+public key and sends it inside the SOAP Message, only the service/recipient can open the the mesage with a private key
+
+- Confidentiality
+the clients generates a symmetric key and encrypts the message with that key, Then it encrypts the symmetric key with the service's public key
+and send it inside the SOAP message, the service decrypts the symmetric key using their private key, and with this symmetric key, decrypts the message
+
+- Sign and encrypt - X509 authentication 
+ the client encrypts the message using the service public key and sign it using their private key, the service decrypts the message using their private key
+ and checks the signature over the client public key
+
+- Sign and Encrypt - Anonymous client
+ The client generates a symmetric key and encrypts and signs the mesage with that key. then it encrypts the symmetric key with the service's public key and sends it inside the SOAP message. The Service decrypts the
+ symmetric key using their private key and with this symmetric key decrypts the message and checks the signature
+
+- Encrypt only - UsernameToken authentication
+this scenario has a mix between the UsernameToken and Confidentiality
+the client generates a symmetric key and encrypts the message with that key.
+Then, it encrypts the symmetric key with the service's public keyand sends it inside the SOAP message. the service decrypt the symmetric key using their private
+key and with this symmetric key decrypts the message. the user sends the UsernameToken in the message
+and it's validated against the user stores setting up in the EI Server
+
+
+- Sign and Encrypt UsernameToken Authentication
+this scenario is a mix between the UsernameToken and Sign and Encrrypt - Anonymous clients
+the client generates a symmetric key and encrypts and sign the message with that key. then it encrypts the symmetric key with the service's public key
+and sends it inside the SOAP message. The service decrypts the symmetric key using their private key, and with this symmetric key, decrypts the message and checks the signature.
+The user sends the UsernameToken in the message and its validated against the user stores setting up in the EI server.
+
+Secure conversation - Sign only Service as STS - Bootstrap policy - Sign and encrypt, x509 authentication
+this scenario establishes a security context between the client and the service using the x509 certificates All the communication in the security context
+is signed using the keys from the security context
+
+Secure converstaion - Sign only - Service as STS - Bootstrap policy - Sign and encrypt, anonymous clients
+this scenario is equal to the previous with the only difference being that the messages inside the security context are encrypted instead of signed,
+this makes the environment safer because the message is not visible to third parties
+
+Secure conversation - Sign and Encrypt - Service as STS - Bootstrap policy - Sign and encrypt, X509 authentication
+this is the scenario in which the previous two are combined into a signed and encrypted message
+
+Secure conversation - Sign only - Service as STS - Bootstrap policy - Sign and encrypt, anonymous clients
+In this scenario we also have a security context between the client and the service, but the client doesn't have a X.509 certificate, 
+so the context is established using a symmetric key
+
+Secure conversation - Sign and Encrypt - Service as STS - Bootstrap policy - Sign and encrypt, anonymous clients
+Same as before but encrypted instead of signed
+
+Secure conversation - Encrypt only - Service as STS - Bootstrap policy - Sign and encrypt, UsernameToken authentication
+same as before but with the UsernameToken
+
+
+Secure conversation - Sign and encrypt - Srevice as STS - Bootstrap policy - Sign and encrypt, UsernameToken authentication
+same as before but signed and encrypted together
+
+Kerberos token-base security
+for this scenario we need a Key Distribution Center KDC and an authentication server to connect to our services, 
+in the <EI_HOME>/repository/conf/security path we found two configuration files named krb5.conf with the KDC server configuration an jass,conf with the authorization configuration
+
+For secure communication we can use the Secure Sockets Layer (SSL) and Transport Layer Security (TLS) that will encrypt the message
+these protocols use the Public Key Infrastructure (PKI) scenario, in whihc the certificates are used to encrypt and sign the communication
+
+by default the WSO2 Servers are configured with a certificate for localhost that is only suitable for test environments
+
+in order to create a valid certificate for the server we will use the keytool program which is the default program inside the JDK (Java Development Kit)
+
+By default the Enterprise Integrator does not provide any athentication method for the REST APIs so we need to create a Java program with the
+logic of the authentication generate a .jar project, deploy to the server in the <WSO2_HOME>/lib folder and configure the APIs to use this project like handler
+
+in basic authentication scenario the consumer will send the username and password in the authorization header of the request.
+This header has the username:password structure codified in the base64 format. in the Java class we get the credentials as follows
+
+String authHeader = (String) headersMap.get("Authorization");
+String credentials = authHeader.substring(6).trim();
+String decodedCredentials = new String(new Base64().decode(credentials.getBytes()));
+String userName = decodedCredentials.split(":")[0];
+String password = decodedCredentials.split(":")[1];
+
+<api xmlns="http://ws.apache/org/ns/synapse" name="flights" context="/flights">
+ <resource methods="POST" uri-template="/get?from={from}>
+  <inSequence>
+  </inSequence>
+ </resource>
+ <handlers>
+  <handlers>
+   <handler class="org.wso2.rest.BasicAuthHandler"/>
+  </handler>
+</api>
+
+the next is used to authenticate against wso2 identity Server trough the oauth mediator done by the following
+
+<oauthService remoteServiceUrl="" username="" password="">
+
+in which the remoteserviceurl - the url is of the identity Server
+
+for creating a secured SOAP Proxy we need three different projects 
+- the ESB Config Project which will store the proxy
+- the Registry Resources Project which will get the security policy
+- the Composite Application Project this will create the .car file deployable 
+
+in the proxy we need to configure two properties
+- Securty enabled
+- Set the path to the previous policy
+
+when to invoke a secure backend using a basic authentication we need to send a header called authorization in the request containing the username and password
+joined with : and encoded in base64
+
+<property name="username" value="USERNAME_OF_BACKEND"scope="default" type="STRING" xmlns="http://ws.apache.org/ns/synapse"/>
+<property name="username" value="PASSWORD_OF_BACKEND" scope="default" type="STRING" xmlns="http://ws.apache.org/ns/synapse"/>
+<property <property expression="fn:concat('Basic ', base64Encode(fn:concat($ctx:username,':',$ctx:password)))"
+
