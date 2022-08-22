@@ -1188,5 +1188,153 @@ joined with : and encoded in base64
 
 <property name="username" value="USERNAME_OF_BACKEND"scope="default" type="STRING" xmlns="http://ws.apache.org/ns/synapse"/>
 <property name="username" value="PASSWORD_OF_BACKEND" scope="default" type="STRING" xmlns="http://ws.apache.org/ns/synapse"/>
-<property <property expression="fn:concat('Basic ', base64Encode(fn:concat($ctx:username,':',$ctx:password)))"
+<property expression="fn:concat('Basic ', base64Encode(fn:concat($ctx:username,':',$ctx:password)))"/>
+
+For Oauth you do the same but with a bearer token instead of the credentials
+done as following
+
+<property name="token" value="OAUTH_TOKEN" scope="default" type="STRING" xmlns="http://ws.apache.org/ns/synapse"/>
+<property expression="fn:concat('Bearer',$ctx:token)" name="Authorization" scope="transport" type"STRING" xmlns="http://ws.apache.org/ns/synapse"/>
+
+To get a valid OAuth token from the WSO2 API Manager we can retrieve it trough the code below
+<property value="XXXX" name="CONSUMER_KEY" scope="default" type="STRING"/>
+<property valye="YYYY" name="CONSUMER_SECRET" scope="default" type="STRINg"/>
+
+<property expression="fn:concat($ctx:CONSUMER_KEY,':',$ctx:CONSUMER_SECRET)" name="accessTokenKey" scope="default" type="STRING"/>
+<property experssion="base64Encode($ctx:accessTokenKey)" name="encodedAccessTokenKey" scope="default" type="STRING"/>
+<property expression=""fn:concat('Basic',$ctx:encodedAccessTokenKey)" name = "Authorization" scope="transport" type="STRING"/>
+<property name="ContentType" scope="axis2" type="STRING" value="application/x-www-form-urlencoded"/>
+<send>
+ <endpoint>
+   <http method="post" uri-template="http://<AM_HOST>:<AM_PORT>/token?grant_type=client_credentials"/>
+ </endpoint>
+</send>
+
+the response of the service will have the following message format
+{"token_type":"Bearer","expires_in":2061,"access_token":"ca19a540f5477778788e63632"}
+
+we can parse the preceding message format using an XPath expression
+<property expression="//*[local-name()='access_token']" name="accessToken" scope="default" type="STRING"/>
+<property expression="//*[local-name()='expires_in']" name="expiresin" scope="default" type="STRING"/>
+
+When we have a secure SOAP backend service, we need to specify the policy which is done as shown below
+
+<localEnrty key="securityPolicy" src="path/to/policy"/>
+
+<send>
+ <address uri="http://enterpriseintegrator:8280/flights/list" format="soap11">
+  <enableAddressing/>
+  <enableSec policy="securityPolicy"/>
+ </address>
+</send>
+
+in the out sequence we must delete the security header as follows:
+<header xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-scext-1.0.xsd" name="wsse:Security" action="remove"/>
+
+the throttle mediator is used to restrict the use of service or give priority to a specific group users defined by ip addresses or domains
+
+the syntax goes as follows 
+
+<throttle [onReject="string"][onAccept="string"] id="string">
+ (<policy key="string"/> | <policy></policy>)
+ <onReject>..</onReject>?
+ <onAccept>..</onAccept>?
+</throttle>
+
+there are three parts which the throttle consists of 
+- policy definition = the policies, written inline or in the registry
+- on rejection = mediators inside this will be executed when request does not follow the rules
+- on acceptance = when triggered by a good request will do the inline mediators or external sequence
+
+
+in the following example we will set up a  restriction for the IP 192.168.1.37 to send only five requests per minute to the proxy
+
+<throttle id="testingThrottling">
+ <policy>
+  <wsp:Policy wsu:id=""WSO2MediatorThrottlingPolicy"
+  xmlns:wsp="http://schemas.xmlsoap.org/ws/2004/09/policy"
+  xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurty-utility-1.0.xsd">
+   <throttle:MediatorThrottleAssertion xmlns:throttle="http://wso2.org/products/wso2commons/throttle">
+   </throttle:MaximumConcurrentAccess>
+   <wsp:Policy>
+    <throttle:ID throttle:type="IP">192.168.1.37
+    </throttle:ID>
+    <wsp:Policy>
+     <throttle:Control>
+      <wsp:Policy>
+       <throttle:MaximumCount>5
+       </throttle:MaximumCount>
+       <throttle:UnitTime>60000
+       </throttle:UnitTime>
+       <throttle:ProhinitTimePeriod>0
+       </throttle:ProhibitTimePeriod>
+      </wsp:Policy>
+    </throttle:Control>
+   </wsp:Policy>
+  </wsp:Policy>
+ </throttle:MediatorThrottleAssertuin>
+ </wsp:Policy>
+ </policy>
+ <onReject>
+  <log>
+   <property name="Throttle" value="onReject"/>
+  </log>
+  <onAccept>
+   <log>
+    <property name="Throttle" value="onAccept"/>
+   </log>
+  </onAccept>
+</throttle>
+
+cahching is meant to prevenet the server from wasting time, and from overloading
+
+the syntax goes as follows
+
+<cache[id="string"] [hashGenerator="class"] [timeout="seconds"][scope=(per-host|per-mediator)] collector=(true|false)[maxMessageSize="in-bytes"]>
+ <onCacheHit [squence="key"]>
+  mediator+
+ </onCacheHit>
+ <implementation type=(memory | disk) maxSize="int"/>
+ </cache>
+
+when the service recieves the same request it executes the onCacheHit sequence whihc can be defined online or referred from an existing sequence
+this mediator has to be done at both the in sequence and out sequence
+inside insequence = to check the requests collector="false"
+inside outsequence = to store the result of the service collector="true"
+
+the following code is an implementation of the cache mediator
+
+<api xmlns="http://ws.apache.org/ns/synapse" name="flights"/>
+ <resource methods="GET" url-mapping="/list">
+  <inSequence>
+   <log>
+    <property name="inSequence" value="***"/>
+  </log>
+  <cache scope="per-host" collector="false"
+  hashGenerator="org.wso2.carbon.mediator.cache.digest.DOMHASHGenerator" timeout="20">
+   <onCacheHit>
+    <log>
+     <property name="message cached" value="***"/>
+    </log>
+    <respond/>
+   </onCacheHit>
+   <implementation type="memory" maxSize="100"/>
+  </cache>
+  <payloadFactory media-type="xml">
+   <format>
+    <flights xmlns="">
+     <flight>
+      <company>PacktAir</company>
+      <time>10:30</time>
+      <price>$ 300</price>
+     </flight>
+    </flights>
+   </format>
+   <args/>
+  </payloadFactory>
+  <loopback/>
+  </inSequence>
+  <outSequence>
+   <log>
+    <property name="outsequence" value="***"/>
 
