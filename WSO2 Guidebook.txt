@@ -1,4 +1,4 @@
-current page: 248
+current page: 261
 
 WSO2 Data Service Server = exposes data from different resources
 
@@ -1337,4 +1337,120 @@ the following code is an implementation of the cache mediator
   <outSequence>
    <log>
     <property name="outsequence" value="***"/>
+   </log>
+   <cache scope="per-host" collector="true"/>
+   <respond/>
+  </outSequence>
+</resource>
+</api>
+
+
+scheduled tasks are tasks which can be scheduled at a time when there are not allot of users like the night to improve permformance
+there are three types of scheduled tasks:
+ - DSS Task
+ - ESB task
+ - Custom task
+
+DSS Tasks are used for scheduling data services in the schedule system that we have in the old Data Service Server of WSO2
+with ESB tasks we can schedule tasks for proxy services, sequence and endpoints like in the ESB server
+
+for using the tasks the EI server uses a configuration file called task-config.xml, stored in the <EI_HOME>/conf/etc
+the first property to configure is under the taskServerMode tag, which specifies the mode of the Enterprise Integrator server
+the following options are there:
+STANDALONE: the EI is running in a simple server instance, basic server with no configurations is STANDALONE, the tasks will be managed locally
+CLUSTERED: we have a set of clustered server for better performance and scalibility, when a server fails this will be taken up by another server
+AUtO: at Startup will be checked if clustering is enabled in the system or not, default option
+
+the next properties will only work when clustered mode is on
+
+the TaskServerCount tag is an integer field used to specify the total numbers of servers inside the cluster, the tasks will be waiting untilthe total
+number of servers configured in this property are active before scheduling it, in other cases all the tasks will be scheduled in the first server that starts
+
+the next property is <defaultLocationResolver> which have the following options
+
+ - RoundRobinTaskLocationResolver: round robin algorithm is used to distribute proprortionally between servers
+ - RandomTaskLocationResolver: a random algorithm where teh tasks are allocated under the nodes
+ - RuleBasedLocationResolver: we apply rules based on types and Namespace
+
+ the rules follows the next patterns
+
+ <property name="rule name">
+ task type pattern, task name patter, address pattern of the server node
+ </property
+
+one example is the following
+
+<defaultLocationResolver>
+ <locationResolverClass>
+ org.wso2.carbon.ntask.core.impl.RuleBasedLocationResolver
+ </locationResolverClass>
+ <properties>
+  <property name="rule-1">
+   HIVE_TASK,HTTP_SCRIPT*,192.168.1.*
+  </property>
+  <property name="rule-2">
+   HIVE_TASK,.*,192.168.2.*
+  </property>
+ </properties>
+</defaultLocationResolver>
+
+
+this will be executed sequentially, so if 1 is executed 2 will be forgotten about
+
+ - Scheduling integration Services - 
+this scheduled task is based on the Enterprise Service Bus server tasks, which we can schedule artifacts
+the path is as follows: Main | Manage | Service Bus | Scheduled Tasks
+
+1. specifying the delay between executions in ythe interval attribute and optionally the number of times it should be executed e.g:
+<task name="IntervalTask" class="org.apache.synapse.startup.tasks.MessageInjector">
+< trigger interval="3" count="5"/>
+</task>
+
+using a cron expression
+<task name="CronTask" class="org.apache.synapse.startup.tasks.MessageInjector">
+ <trigger cron="0 0 8 * *"/>
+</task>
+
+this will be executed once a day at 8:00 AM
+
+<task name="OnceTask" class="org.apache.synapse.startup.tasks.MessageInjector">
+ <trigger once="true"/>
+</task>
+
+this task will be execited once after the server starts
+
+this is the syntax
+
+<task class="string" name="string" [group="string"]>
+ <property name="string" value="String"/>
+ <property name="string"><somexml> config </somexml></property>
+ <trigger (
+  [[count="int"]? interval="int"] |
+  [cron="string"] |
+  [once=(true | false)]
+ ) />
+</task>
+
+class = here we can choose custom task implementations, library's and default onces
+
+name = name
+
+group = name of group default is synapse.simple.quartz
+
+pinnedServers = this is a list of WSO2 Enterprise Integrator server to schedule this task
+
+trigger:
+ - simple = we can configure the interval and count attributes to specify the delay and the number of times that the task must be trigered, respectively
+ - cron = a cron expression to launch the task
+ - once = a boolean attribute to execute the task only once at server startup
+
+ when the default task is implemented in the management console we get the following options
+
+ - format = soap11, soap12, get etc.
+ - message = payload to inject to the synapse layer,mandatory
+ - sequenceName = name of the sequence to inject the message, it will only be used when the injectTO property os configured as proxy
+ - to = Specifies the endpoint address
+ - proxyName = Name of the proxy to inject the message it will only be used when the injectTo property is configured as proxy
+ - 
+
 
