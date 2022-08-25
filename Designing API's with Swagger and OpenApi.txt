@@ -1,4 +1,4 @@
-page: 49
+page: 91
 
 1
 ==============
@@ -66,7 +66,130 @@ GET methods can have body's like POST's but with a size limit, and binary data c
 
 body also allows encryption, a query has the chance that the data would be logged by servers and proxies between your client and server
 
+%20 is URL encoding for spaces
+
+there are two utilities you can use to opena TCP connection (a pipe you can read data from and write into it)
+telnet is available on most systems, OpenSSL is on Unix systems only, the following commands are only used on the Unix systems
+
+$ telnet farmstall.designapis.com 80
+# Or for HTTPS sites...
+$ openssl s_client -quiet -connect farmstall.designapis.com:443
+
+after which the headers are filled in as follows in the headers
+
+Image 2 - 3.png
+
+The above is a GET request, 
+POSTS are done as show in the image below
+
+Image 2 - 4.png
 
 
+3
+===============================
+
+When we turn a API into computer readable data we call it a definition e.g YAML,JSON
+
+Image 2 - 5.png
+
+OpenAPI can use both JSON and YAML, but YAML is easier to handwrite
+
+YAML is a superset of JSON because of the use of flow types [],{}
+this makes all JSON documents viable YAML types
+
+Image 2 - 6.png
+
+YAML has more advanced features in comparison with JSON, like advanced/custom data types, anchors, etc.
+
+the following image shows not everything has to be filled in, it shows a Request which we know is a GET method with /reviews as context,
+and it returns a list of reviews
+
+Image 2 - 7.png
+
+to describe a query parameter which takes the numbers 1-5 we write the following
+
+Image 2 - 8.png
+
+ https://editor.swagger.io/ is a tool we can write our OpenAPI definitions in
 
 
+ the minimal workable OpenAPI definition has the following :
+  - The OpenAPI Identifier and the version
+  - the info object with the title and version fields
+  - an empty paths object
+
+Image 2 - 9.png
+
+adding a GET to the path as shown below in the image
+
+Image 2 - 10.png
+
+you can add a server field by using
+- url: https://farmstall.designapis.com/v1
+
+Image 2 - 11.png
+
+
+JSON schema is a specification for descrbining JSON Data
+
+OpenAPI 3.0.x supports JSON Schema draft 04 while OpenAPI 3.1+ supports JSON Schema 2020
+
+this schema can be applied to the response to add a response structure to follow, show below
+
+Image 2 - 12.png
+
+{
+ "rating": 3
+}
+
+can be written in the JSON Schema fragment
+
+type: object
+properties:
+ rating:
+ type: integer
+ minimum: 1
+ maximum: 5
+
+an object can have the proprties keyword attached to define a property
+
+extra fields are fine by default it can be changed
+e.g 
+
+JSON                        Valid     Description
+{ "rating": "hi" }          Invalid   Expected a number but found a string.
+{ "rating": 100 }           Valid     100 is a valid number.
+{ "rating": 100, "a": "b" } Valid     Extra fields are fine (by default)
+
+limits can be set like a minimum and maximum number aswell as numbers with decimals written as decimals or whole numbers as integer
+
+Range   Category      Notes
+1xx     Informational The most common is when a websocket connection is upgraded.
+2xx     Success       This indicates some form of success, like the general 200 or the 201 for “created.”
+3xx     Redirects     The resource has a different location/URI.
+4xx     Client error  The client did something wrong, like misspell a resource or provide invalid details.
+5xx     Server error  The server hit an error that isn’t a fault of the client.
+
+MIME/media types are the following
+
+Media type       Description
+text/html        The HTML you get back from a web server
+text/csv         Comma-separated values
+image/png        PNG encoded image
+application/json JSON data
+application/xml  XML data
+
+You may find suffixes in some media types that indicate a wrapper format. For example,
+the SVG media type used for scalable images has the media type of image/svg+xml,
+which has the suffix +xml. This indicates that the format is XML but that it will be compliant with the SVG schema.
+Occasionally API designers will use custom (or vendor) media types to version the
+API. These vendor extensions can also make use of a suffix to indicate the wrapper
+format. An example of this in the wild is application/vnd.github.v3+json, which
+is for version 3 of GitHub’s public API. You’ll note that it uses JSON as a wrapper
+format. Y
+
+uuid follows the regex pattern '^[0-9a-fA-F\-]{36}$' 
+
+openAPI uses the regex syntax of Javascript also called ECMAScript
+
+Image 2 - 13.png
