@@ -224,7 +224,7 @@ double click on your DataMapper Mediator and create new project
 - right click on output box and choose add new root
 - right click on response and click on addfield, type should be string name should be yousay
 - follow the image as following
-- image 1.png
+- image 1 - 1.png
 
 there are multiple entrypoints which exist of the following:
 - proxy acts as a virtual service recieves messages and mediates them before sending them to the endpoint
@@ -467,7 +467,7 @@ there are three different types of properties:
 
     the given image settings will trigger the main sequence when recieving an event on the set localhost port
 
-    image 2.png
+    image 1 - 2.png
 
     CUSTOM
     =============================
@@ -1451,6 +1451,8 @@ trigger:
  - sequenceName = name of the sequence to inject the message, it will only be used when the injectTO property os configured as proxy
  - to = Specifies the endpoint address
  - proxyName = Name of the proxy to inject the message it will only be used when the injectTo property is configured as proxy
- - 
+ - registryKey = Path to the registry artifact to inject the message
+ - InjectTo = Configure where the message will be injected , the available options are sequence, proxy and main
+ - soapAction = configure the SOAP action header when the task is consuming a soap endpoint in the to property 
 
 
