@@ -1,0 +1,25 @@
+- open configs map till endpoints is open
+- double click on the necessary endpoint inside the source view you will find the endpoint name
+- click on source view
+- here you can see the variable which gives the error
+- go to gitlab and go to infra projects
+- click on build-wso2-micro-integrator-release-ami
+- go to feature/develop branch if needed
+- go to ansible
+- go to roles/wso2-micro-integrator
+- files/wso2mi
+- click on file-dev.properties
+- copy everything inside
+- go to the integrationstudio map/runtime/microesb/conf/file.property and open it in notepad
+- copy the file-dev.properties input inside this file
+- copy this text -Dproperties.file.path = default
+- click on configs > debug as > Debug Configuration
+- expand the Generic Server
+- go to arguments
+- scroll down VM arguments
+- paste the text
+- click apply
+- close
+- terminate all debug servers
+- run mediation debug
+- check if micro integrator is version 1.2.0
