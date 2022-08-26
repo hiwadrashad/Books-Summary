@@ -1,4 +1,4 @@
-page: 91
+page: 96
 
 1
 ==============
@@ -193,3 +193,23 @@ uuid follows the regex pattern '^[0-9a-fA-F\-]{36}$'
 openAPI uses the regex syntax of Javascript also called ECMAScript
 
 Image 2 - 13.png
+
+multiple types like this
+type: [ number, string, null ] 
+are only allowed in JSON Schema not in OpenAPI
+
+to make a type nullable set the following 
+type: string 
+nullable: true
+
+an array can be set trough the items property
+
+type: array
+ items:
+  type: object
+  properties:
+   rating:
+   type: integer
+   minimum: 1
+   maximum: 5
+
