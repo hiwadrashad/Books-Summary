@@ -1,4 +1,4 @@
-page: 96
+page: 136
 
 1
 ==============
@@ -213,3 +213,127 @@ type: array
    minimum: 1
    maximum: 5
 
+
+request and response added
+
+Image 2 - 14.png
+Image 2 - 15.png
+
+there can be only one RequestBody per operation, but each media type can describeits own 
+shape and each shape can be made to fit many different bodies
+
+only some operations are allowed to have request bodies, notable ones which restrict
+this are GET and DELETE,
+
+Image 2 - 16.png
+
+traling comma's are only alowed when the item is a field or array item, that
+isn't the last item
+
+examples can be given
+
+Image 2 - 17.png
+
+path parameters are the variables used in url's
+like GET/Reviews/{reviewId}
+
+path parameters have the following required properties
+ - name
+ - in = location i.e, query, path, header and cookie
+ - schema
+
+parameters can also include the following properties
+ - required = required or not this parameter is always required for path parameters
+ - example
+ - deprecated
+ - style = how the value will be serialized
+ - explode = whether or not to create a seperate instance for each value in arrays and objects
+ - allowreserved = whether or not to allow reserved characters i.e / and ?
+   usefull for catchall parameters
+
+Image 2 - 18.png
+
+
+image showing security implementation
+Image 2 - 19.png
+
+password and username implementation
+
+Image 2 - 20.png
+
+Authorization is done as the following
+
+Image 2 - 21.png
+
+OpenAPI supports four categories of security
+ - apiKey
+  - in: header
+  - in: query
+  - in: cookie
+ - http
+  - scheme:
+ - oauth2
+  - flows: {}
+ - openIdConnect
+  - openIdConnectUrl: <url>
+
+openapi: 3.0.0
+# ...
+paths:
+ # ...
+ /reviews:
+ post:
+ # ...
+  security: 
+   - MyUserToken: [] 
+
+on top of the arrangement we will use the security parameter
+this has an empty array which normally would have a list of scopes that apply
+within the security scheme, this is not used with apiKey types only with oauth2
+
+to add the optional security option do the following
+openapi: 3.0.3
+# ...
+paths:
+ # ...
+  /reviews:
+  post:
+   # ...
+   security: 
+    - {} 
+    - MyUserToken: []
+
+in here the empty brackets mean that security is optional 
+
+- http—The http type is for the HTTP Basic authentication scheme, which
+describes how to send a username and password through the Authorization
+HTTP header. It is specified in RFC 7617 (https://datatracker.ietf.org/doc/
+html/rfc7617). Just like apiKey, http doesn’t use scopes.
+
+- oauth2—The oauth2 type is for the OAuth 2.0 protocol, which describes a process for delegated authentication. If you’ve ever been to a website and they
+asked you to log in with a third-party account (like Google or Facebook), you’ve
+experienced what’s often called the “OAuth dance.” And if the third-party
+account asked you which information you wanted to share (such as your name
+and email), those are the scopes that the API providers allow the API consumer
+to access. You can think of scopes as capabilities that are granted to a user of an
+API. After “dancing” between two websites, the API provider hands out a bearer
+access token that the API consumer can send through the Authorization
+HTTP header. OAuth is specified in RFC 6749 (https://datatracker.ietf.org/
+doc/html/rfc6749), and there’s also a great website at https://oauth.net/ that
+can help you get started with the protocol.
+
+- openIdConnect—The openIdConnect type is for the OpenID Connect protocol,
+which itself is an extension of OAuth 2.0, that adds things like automated discovery and standardized endpoints to get user details. You can learn more
+about OpenAPI Connect on its website: https://openid.net/connect/.
+
+
+
+Image 2 - 22.png
+
+you can tag API's by Category
+
+all metadata options there are 
+
+Image 2 - 22.png
+
+CommonMark is the markup type which is amde use of in OpenAPI
