@@ -1,4 +1,4 @@
-page: 136
+page: 217
 
 1
 ==============
@@ -334,6 +334,170 @@ you can tag API's by Category
 
 all metadata options there are 
 
-Image 2 - 22.png
+Image 2 - 23.png
 
-CommonMark is the markup type which is amde use of in OpenAPI
+CommonMark is the markdown type which is made use of in OpenAPI
+
+an example of markdown is at https://github.com/designapis/openapi/blob/main/ch08/02.yml
+
+how to add tags 
+
+Image 2 - 24.png
+
+html of swaggerUI
+
+Image 2 - 25.png
+
+
+2
+================
+
+Domain modeling is the process of taking a problem domain (or area of interest) and
+creating a description that can be implemented in computer software.
+
+To create a domain model, we map concepts from the real world onto an
+abstract representation. We refer to this representation as a model, while being fully
+aware that this creates some ambiguity—the term “model” can refer to the representation of a single concept (for example, the “Dog” model) or of the whole area of
+interest (the domain model)
+
+You can
+think of the concept as the thing in the real world and the model as the thing
+we’ll have on paper
+
+r. Attributes are data that describes the concept, such as a name, and
+actions are things that the concept can do or things a user can do with the concept
+
+Image 2 - 26.png
+
+An API, however, is more akin to the view layer of an application. It is a clearly
+defined boundary between parts of a system, and it can potentially act as an abstraction layer and hide underlying complexity. An API designer should always look at the
+API from the perspective of the client and not the server.
+
+you’ll have classes in your application layer, and you’ll have tables in your database. And depending on how the
+application is built, there will either be a manual translation between them or an
+automated system called an object-relational mapper (ORM). The API can be considered a third layer with its own domain model.
+
+without consciously knowing it, you already created a representation of this domain
+model in OpenAPI, using JSON Schema for attributes and API paths for actions.
+
+we’ve already talked
+about two types of users: pet owners and pet sitters. Our model needs to accommodate that by including a role attribute.
+
+user stories can be written as, As a <role> I can <capability>, so that <receive benefit>.
+to gain insights0
+
+for user stoeries that depend on other stories, we can use this template:
+
+Given <prerequisite>, I can <capability>.
+
+components can store element definements, it can have a schema sub element like
+
+openapi: 3.0.3
+info:
+ title: PetSitter API
+ version: "0.1"
+paths: {}
+components:
+ schemas: {}
+
+ it can be accessed by the $ref command i.e:
+ $ref: '#/components/schemas/User'
+
+JSON name conventions should be followed which mean lowercase and without spaces
+
+schema names typically start with an uppercase letter
+
+a user made inside a schema goes as the following
+
+Image 2 - 27.png
+
+
+when there is a dependency, this is done by the following
+
+Image 2 - 28.png
+
+
+it is also possible to do this trough the id's shown below
+
+Image 2 - 29.png
+
+there are two (three but this will be shown later) endpoints:
+- Resource endpoint
+- Collection endpoint
+
+Resources are indiviudal instances of a concept in the domain model e.g a job
+or a user
+
+use plurals for storage of multiple models like
+/users/123
+
+this is also called a resource endpoint
+
+when you ask for a collection done like this
+/users
+
+this is called a collection endpoint
+
+it is possible to limit the items we get trough paginiation(will get later on it)
+and filters like the rating limit
+
+it's also common to use the collection endpoint URL combined with the HTTP POST
+method to create a new element for which the ID is not yet known because it is assigned by the server
+
+Operation   Method       Typical    path
+Create      POST         Collection endpoint (/{schema}s)
+Read        GET          Both       collection and resource endpoints
+Update      PUT or PATCH Resource   endpoint (/{schema}s/{id})
+Delete      DELETE       Resource   endpoint (/{schema}s/{id})
+
+For “Read” and “Delete” operations, there is no request body. If necessary, the input
+for “Read” operations, such as filter criteria, typically goes in query parameters.
+ For “Create” and “Update” operations, you need to send the JSON representation
+of the resource (a JSON structure following the schema) as the request body.
+
+For “Read” operations on resource endpoints, the response is a JSON object following
+the schema of the resource. A successful API call gets status code 200 OK. If the
+requested resource does not exist, the API should return a 404 Not Found.
+ For “Read” operations on collection endpoints, the response is a collection object
+that contains an array of resource objects, optionally accompanied by additional fields
+with metadata. The field that contains the array of items is often called items or the
+name of the resource. Let’s look at an example of a response structure
+
+Image 2 - 30.png
+
+ A successful deletion
+request returns a 204 No Content status code, because 200 expects a response body.
+
+For “Create” operations, which are POST requests on the collection endpoint, the
+response body is typically empty. Instead, the response contains a Location header
+that points to the resource endpoint for the newly created resource. A successful creation request returns a 201 Created status code
+
+representation = account
+
+Image 2 - 31.png
+
+All CRUD implementations in YAML
+
+Image 2 - 32.png
+ 
+POST is done as follows
+
+Image 2 - 33.png
+
+For “Create” operations, which are POST requests on the collection endpoint, the
+response body is typically empty. Instead, the response contains a Location header
+that points to the resource endpoint for the newly created resource.
+
+API Design-First approach is also called the contract-first approach
+
+for the front end there are three options to mock data to win time 
+as the backend usually needs to be finished to work with it
+
+- Mock on the view layer fast but messie
+- mock in a central data store , Redux RxJS etc. is clean tradeoff is mock data is still n the source file
+- set up a mock API Server like Prism cleanest and least code changes needed due to switch, tradeoff is that data has no logic
+
+Prism creates mockdata dependant on the OpenAPI definitions
+
+
+
