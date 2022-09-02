@@ -1,4 +1,4 @@
-page: 256
+page: 323
 
 1
 ==============
@@ -699,3 +699,227 @@ index.html—for all URLs, and a client-side router handles page generation.
 Session security schem
 
 Image 2 - 46.png
+
+Session Schema
+
+Image 2 - 47.png
+
+integrated login feature
+
+Image 2 - 48.png
+
+A global security declaration looks like an operation-specific security declaration.
+It even uses the same keyword, security, but the declaration sits at the highest level in
+the YAML hierarchy of the OpenAPI definition instead. We can add it to the end of
+the file
+
+openapi: 3.0.3
+#...
+security: 
+ - SessionToken: [] 
+
+ If we want to remove the security requirements from an operation, we have to use the
+security keyword in a slightly different way. Instead of adding a list of requirements
+below it, we have to explicitly set its value to an empty array ([]). Let’s do this for the
+two operations that need it
+
+Image 2 - 49.png
+
+OAS
+tools do not themselves validate API keys, tokens, or passwords; they just check for
+their presence according to the API definition.
+
+With a prefix we’d use
+/api/jobs/{id} for the API endpoint, allowing the frontend developer to use
+/jobs/{id} for the respective page.
+
+A reverse proxy is a web server that accepts incoming
+requests and forwards them to different servers behind it. It is possible to configure
+many web servers, such as Apache or NGINX, as reverse proxies with specific configuration rules (a particular type of reverse proxy for APIs is called an API gateway)
+
+The oas3-tools library looks at the servers element in the OpenAPI file to find a
+prefix. If you open the api/openapi.yaml file, you’ll see a single server with its url set
+to just a slash (/):
+servers:
+- url: /
+We can change that URL to the desired prefix:
+servers:
+- url: /ap
+
+As we mentioned before, an SPA often has two kinds of URL paths, and that applies to
+the PetSitter frontend as well. The first kind points to real static files, and the second
+kind points to application pages that all map to the entry file of the application,
+index.html.
+ Supporting the first kind doesn’t take much effort. Express has the express.static
+built-in middleware function, which automatically adds all static files in a given directory as routes to the API. We can use the middleware on the root path for the hostname (/) so that both the starting page and the static files are served, and the routes
+defined by the API still work. Also, we can create a rule for every path starting with
+/app and map it to the index.html file using Express’s sendFile() function. Note
+that, unlike for the API, this setup did not magically move the routes under /app; Max
+had already implemented the frontend that way.
+ The following code listing shows the two rules in the context of the app initialization code in the index.js file
+
+Image 2 - 50.png
+
+After adding this code and restarting the API server with npm start, opening http:/ /
+localhost:8080/ will serve the frontend. You can confirm that Swagger UI still exists at
+http:/ /localhost:8080/docs/ and now references the API at /api.
+
+A breaking change in an API is anything that requires consumers of that API to change their integration, because otherwise it will no longer
+work.
+
+Postel’s Law, also known as the robustness principle: “Be liberal
+in what you accept, and conservative in what you send.”
+
+The second principle is Hyrum’s Law, which is the observation that any observed
+or accepted behavior of the system will be the de facto contract, and someone will probably depend on it
+
+There are four relevant OpenAPI keywords for inheritance, also known as composition
+keywords. They are allOf, oneOf, anyOf, and not. Let’s look at their definitions:
+- allOf—Indicates that a schema is a composition of multiple other schemas,
+which means that it has all the attributes from those schemas. If we checked a
+JSON object against a schema with allOf, it would only be valid if it passed the
+check against all schemas.
+- oneOf—Indicates that a schema is one of multiple alternative schemas, which
+means that it has the attributes of exactly one of those schemas. If we check a
+JSON object against a schema with oneOf, it would only be valid if it passed the
+check against just one of those schemas, not multiple schemas (and obviously
+not zero).
+- anyOf—Indicates that a schema is a combination of multiple schemas, which
+means it can have attributes from any of those schemas. If we checked a JSON
+Table 16.3 The Cat field and its type
+Field Type
+breed string
+Listing 16.5 PetSitter OpenAPI Cat schema
+object against a schema with anyOf, it would be valid as soon as it passed the
+check against at least one of the others.
+- not—Indicates the inverse. With not, we can confirm that a JSON value isn’t
+valid against a schema
+
+use of polymorphism in OpenAPI
+
+Image 2 - 51.png
+
+- With allOf, we could say that a dog is a composition of all the Pet properties
+and the specific Dog properties, which would be correct.
+- With oneOf, we could say that a pet should either be represented by the Cat
+schema or the Dog schema, which is also correct and indicates the reverse of
+the previous statement.
+- With anyOf, we could say something along the lines that pets have any combination of Cat and Dog properties, which doesn’t make sense (unless you are a scientist working on the genetic modification of pets).
+- With not, we could say, for example, that a Dog is not a Cat and vice versa.
+While that is technically true, it doesn’t help us express the Pet-to-Dog and Petto-Cat relationships.
+
+outer and innercomposition
+
+Image 2 - 52.png
+
+but OpenAPI knows nothing about the semantics of the species
+property. That means it would technically be valid to create the following object:
+
+{
+ "name" : "Fluffy",
+ "species" : "Cat",
+ "age" : 5,
+ "breed" : "Border Collie",
+ "size" : "50 cm"
+}
+
+Luckily the creators of OpenAPI added an additional keyword to the specification that
+helps in this type of situation.
+It’s called discriminator, and its purpose is to define a
+property whose value indicates a schema to select.
+
+You need to add the discriminator keyword next to the oneOf keyword on the
+same level in the YAML file
+
+The prerequisite for using discriminators is that all the
+entries inside that oneOf must be references and not inline schemas, because they
+need to have a name that identifies them, and inline schemas don’t have those. The
+discriminator definition is an object with two other keywords, propertyName and
+mapping:
+ With propertyName you specify the name of the property that points to the
+respective schema. It must be a string property that exists in each of the
+schemas. We’ll show you shortly how that is done.
+ The mapping keyword describes which value of that property corresponds to
+which referenced schema. For example, it can connect the string “Cat” with the
+Cat schema. There is an implicit mapping that automatically connects the
+string with a schema whose name is identical to the value of the property in a
+JSON object (e.g., “Cat” with the Cat schema, “Dog” with the Dog schema), but
+we recommend making things explicit
+
+Image 2 - 53.png
+
+By default, properties in JSON objects are optional. To make them mandatory, you
+can use the required keyword to list a number of properties that a JSON object must
+have in order to be valid against the schema
+
+Image 2 - 54.png
+
+- Filters reduce the full dataset to
+a subset.
+- Sorting puts that subset in a
+specifically ordered collection.
+- Pagination returns a section of
+that ordered collection
+
+gn filters.
+ First of all, let’s consider two types of filters. The primary type we’re looking at is a
+selection filter, which means it selects a subset of resources from a collection. In the
+FarmStall API, that would be all reviews with specific ratings. There’s another type of
+filter, called a projection filter, that selects a subset of fields to specify what’s shown for
+each resource—it doesn’t affect which resources the API returns. It allows API consumers to say that they’re only interested in some fields for the resources in the collection. For example, imagine you have an API for an online shop with a Customer
+schema. The Customer schema most likely contains the full postal address of the customer, so that you can ship goods to them. However, email marketing software as an
+API consumer would not be interested in a postal address. It just needs the customer’s
+name and email address. This would be a use case for projection filters
+
+In a projection filter To receive data from all customers but only
+their names and emails, the API consumer could request GET /customers?fields=
+name,email
+
+single acceptable value, or a range of acceptable values. We can formulate ranges in
+different ways:
+- For any data type—An enumeration of acceptable values
+- For numbers—Exact matches (=), less than (<), greater than (>), less than or
+equal (< =), greater than or equal (> =), between
+- For strings of text—Exact matches, case-insensitive matches, text starting with,
+text ending with, text containing
+
+With the square bracket style, suffixes should be part of the inner field name and not
+appear at the end. For example, the parameter should be address[zip_code.gte],
+not address[zip_code].gte
+
+We’d
+consider the following all good options for a country filter:
+- addresses.country
+- addresses[][country]
+- addresses[country]
+
+subresource collection = filtered collection
+
+Apart from adding type: object, however, we also have to specify how we want the
+object serialized into key/value pairs. For this purpose, there’s the style keyword,
+and by default OpenAPI assumes the form style. This style flattens the object, which
+means that the query parameter is called, for example, age_below. If we want to make
+sure the object converts its properties to something like pets[age_below], we have to
+add style: deepObject to it.
+
+Image 2 - 55.png
+
+Here’s an example of a request that combines some of the filters we’ve added, imagining a potential pet sitter who would like to look after a cat sometime in July 2022:
+curl -H "Authorization: {Auth}" "https:/ /petsitter.designapis.com/jobs \
+ ?start_time_after=2022-07-01T00:00:00+00:00 \
+ &end_time_before=2022-07-31T00:00:00+00:00&pets[species]=Cat
+
+ APIs with offset-based or page-based pagination (this discussion of offset-based
+applies to page-based as well) accept two common query parameters for their collection endpoints:
+- The first parameter indicates the maximum number of results to return. Typically this is called limit or per_page. It’s common to make the parameter
+optional and set a default value in its absence. There should also be a maximum
+limit that the API is willing to serve in a single request.
+- The second parameter indicates either the number of results (offset-based) or
+the number of pages (page-based), starting from the beginning, to skip before
+returning any. In the former case it’s generally called offset, and in the second
+case it’s often called page. If you omit this parameter, the offset is 0, meaning
+results are returned from the beginning.
+
+ Assume you have 40 potential results in a collection. Calling the collection endpoint with limit=20 (or per_page=20, depending on the name used in the API)
+would return the first page with resources 1 to 20. To get resources 21 to 40, you’d call
+the API with limit=20&offset=20 for resource offsets or limit=20&page=2 for pagebased pagination
