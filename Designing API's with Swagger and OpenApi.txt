@@ -1,4 +1,4 @@
-page: 323
+page: 354
 
 1
 ==============
@@ -923,3 +923,110 @@ results are returned from the beginning.
  Assume you have 40 potential results in a collection. Calling the collection endpoint with limit=20 (or per_page=20, depending on the name used in the API)
 would return the first page with resources 1 to 20. To get resources 21 to 40, you’d call
 the API with limit=20&offset=20 for resource offsets or limit=20&page=2 for pagebased pagination
+
+total results based pagination
+{
+ "items": [
+ {
+ //... 
+ }
+ ],
+ "total_results" : 20
+}
+
+cursor based pagination
+
+{
+ "items": [
+ {
+ // item 30
+ },
+ ...
+ {
+ // item 21
+ }
+ ],
+ "cursor" : "abcd"
+}
+
+OData has a so-called “next link” in each API response that describes
+how to make the request for more data. JSON:API suggests providing links for
+next, previous, first, and last to allow API clients to move between pages
+
+cursor pagination input
+
+Image 2 - 56.png
+
+pagination response
+
+Image 2 - 57.png
+
+As we’ve mentioned before, API consumers can combine filters and pagination. Let’s
+take the sample request and add a limit parameter:
+curl -H "Authorization: {Auth}" "https:/ /petsitter.designapis.com/jobs \
+ ?start_time_after=2022-07-01T00:00:00+00:00 \
+ &end_time_before=2022-07-31T00:00:00+00:00&pets[species]=Cat&limit=10"
+This time, the result also includes a cursor:
+{
+ "items" : [
+ //...
+ ],
+ "cursor" : "507f1f77bcf86cd799439011"
+}
+With that cursor, the API consumer can make a subsequent request:
+curl -H "Authorization: {Auth}" "https:/ /petsitter.designapis.com/jobs \
+ ?start_time_after=2022-07-01T00:00:00+00:00 \
+ &end_time_before=2022-07-31T00:00:00+00:00&pets[species]=Cat \
+ &limit=10&cursor=507f1f77bcf86cd799439011"
+
+ how to implement sorting truogh url
+
+- sort_by=name:asc, sort_by=name:desc
+- sort=+created_at, sort=-created_at
+Another option is to separate field and direction into two different parameters,
+removing the need for a separator character (like “:”):
+- sort_by=name&order_by=asc, sort_by=name&order_by=desc
+
+There may also be a requirement to use multiple sort parameters. For instance, if you
+have a database of contacts, you may want to sort them by the city they live in, and
+within a city you might also want to sort them alphabetically by name. If you need to
+support this kind of behavior, you’ll require another separator character (like “,”).
+Then, your API could look like this:
+sort_by=city:asc,name:asc
+
+OData and JSON:API also use a single parameter. OData calls it
+$orderby and JSON:API uses sort. Both specifications support sorting with
+multiple fields (comma-separated) as well. OData requires the Asc or Desc
+suffix for field names. JSON:API makes ascending the default and asks for a
+minus (“-”) as the prefix if the order should be descending
+
+adding sort parameter 
+
+Image 2 - 58.png
+
+curling a sorting query
+
+curl -H "Authorization: {Auth}" "https:/ /petsitter.designapis.com/jobs \
+ ?start_time_after=2022-07-01T00:00:00+00:00 \
+ &end_time_before=2022-07-31T00:00:00+00:00&pets[species]=Cat&limit=10 \
+ &sort=end_time:desc"
+
+ The specification suggests setting
+the Content-Type to application/problem+json instead of application/json for
+error responses as an additional indicator that it’s an error response and that it’s following a specified standard
+problem+json contains the following fields
+
+Field    Type    Description
+type     string  A URI describing the type of the error
+title    string  A short, human-readable title for the error
+status   integer The HTTP status code
+detail   string  A human-readable longer explanation of the error
+instance string  A URI identifying the occurrence of the proble
+
+error objects created
+
+Image 2 - 59.png
+
+error objects implemented
+
+Image 2 - 60.png
