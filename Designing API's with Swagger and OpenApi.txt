@@ -1,4 +1,4 @@
-page: 354
+page: 401
 
 1
 ==============
@@ -786,10 +786,6 @@ check against just one of those schemas, not multiple schemas (and obviously
 not zero).
 - anyOf—Indicates that a schema is a combination of multiple schemas, which
 means it can have attributes from any of those schemas. If we checked a JSON
-Table 16.3 The Cat field and its type
-Field Type
-breed string
-Listing 16.5 PetSitter OpenAPI Cat schema
 object against a schema with anyOf, it would be valid as soon as it passed the
 check against at least one of the others.
 - not—Indicates the inverse. With not, we can confirm that a JSON value isn’t
@@ -1030,3 +1026,256 @@ Image 2 - 59.png
 error objects implemented
 
 Image 2 - 60.png
+
+For every property in an object, JSON Schema provides the readOnly field. You can
+set it to true to indicate that the value of a property can be read but not written. If you
+set readOnly to false, it indicates that clients can both read and write the field.
+
+SchemaName:
+ type: object
+ properties:
+ id:
+ type: integer
+ readOnly: true
+ # more fields ...
+
+
+In the same fashion, there is the writeOnly field. If you set it to true, the value for
+that property can be written but not read. With a value of false, you have read and
+write access to the field.
+
+SchemaName:
+ type: object
+ properties:
+ password:
+ type: integer
+ writeOnly: true
+ # more fields .
+
+- readOnly—For responses only
+- writeOnly—For request bodies only
+
+ou can specify maximum and minimum to define the smallest and largest valid numbers for a field’s value. Is that maximum or minimum exclusive (<, >) or non-exclusive
+(?, >=) though? As it turns out, by default the limits are non-exclusive. If you want to
+make them exclusive, you can add exclusiveMaximum: true or exclusiveMinimum:
+true to your schema definition. As usual, the absence of these parameters and a false
+value have the same effect.
+
+here’s another keyword, multipleOf, which you can use with integers. It indicates that the number must be a multiple of another number, or, in other words, it
+must be divisible by that number with modulo 0 and an integer result.
+ As an example, the following listing shows a schema with an integer field named
+my_number, which can contain anything between 2 and 20 (but not these exact numbers) that is a multiple of 2 (in other words, an even number)
+
+SchemaName:
+ type: object
+ properties:
+  my_number:
+   type: integer
+   multipleOf: 2
+   minimum: 2
+   maximum: 20
+   exclusiveMinimum: true
+   exclusiveMaximum: true
+
+ NOTE A neat trick is to use multiples of decimals when you want to limit the
+precision of a number. A multipleOf of 0.1 would limit numbers to have a
+maximum precision of tenths, so 12.3 would be valid but 12.34 would be
+invalid, because 12.34 is not a multiple of 0.1.
+
+There are two constraints for the string format:
+ minLength and maxLength indicate the minimum and maximum number of
+characters in a string.
+ pattern is a regular expression for the value of the string
+
+SON Schema and OpenAPI provide the format keyword and a set of predefined
+formats with accessible, human-readable names, for common formats that you’ll need
+to validate in APIs
+
+Format    Purpose                          OpenAPI standard JSON Schema standard
+byte      Base64-encoded data              Yes              No
+binary    Other string-encoded binary data Yes              No
+date      Date (RFC 3339)                  Yes              No
+time      Time (RFC 3339)                  No               Yes
+date-time Date and time (RFC 3339)         Yes              Yes
+duration  Duration                         No               Yes
+email     Email address                    No               Yes
+password  Password—hide from UI            Yes              No
+hostname  Internet hostname                No               Yes
+ipv4      IP V4 address                    No               Yes
+ipv6      IP V6 address                    No               Yes
+uri       URI/URL                          No               Yes
+uuid      UUID                             No               Yes
+
+Dates have the YYYY-MM-DD format (e.g.,
+2021-07-31). Times have the 24-hour HH:MM:SS format (e.g, 16:17:00 for 4:17 p.m.) followed by either “Z” or a UTC offset to indicate the time zone. For a full timestamp in
+date-time, you’d write both, separated with a “T” (e.g., 2021-07-31T16:17:00Z)
+
+WARNING If your API uses a different way to format dates and times, do not
+use the date, time, or date-time formats. In those cases you could use pattern and define the format as a regular expression
+
+You already learned that you can use the items keyword to define the type of data that
+an array contains. Can we also set constraints on the array itself? Yes, we can! The following keywords are available:
+- minItems and maxItems indicate the minimum and maximum number of items
+in the array.
+- uniqueItems specifies whether all items in the array must be unique (true) or
+if it’s acceptable to have duplicates (false)
+
+MyBingoNumbers:
+ type: object
+ properties:
+  my_numbers:
+   type: array
+   minItems: 1
+   maxItems: 10
+   uniqueItems: true
+   items:
+    type: integer
+
+Here’s the gender scenario expressed in OpenAPI to illustrate how enumerations work
+
+chemaName:
+ type: object
+ properties:
+  gender:
+   type: string
+   enum:
+   - male
+   - female
+   - other
+
+
+   By default, JSON Schema
+assumes all properties of an object are optional. If they are present, they must conform to the type, format, and other constraints. However, if they are not present, the
+schema is still valid. You have to make requirements explicit, and that’s what the
+required keyword is for.
+ You might assume that you can add something like required: true in the same
+way you can add readOnly: true. But be careful! That’s not how the required keyword works. Unlike, for example, the readOnly or format keywords, which are set for
+individual properties, requirements are specified in a separate list (an array), and you
+add this list to the object. To add to the confusion, OpenAPI does use required:
+true, but that’s just for parameters, not schemas.
+ To illustrate how required works, have a look at the following listing, where we
+have a Contact schema with name, email, phone and address properties. Only name
+and email are required; the others are optional
+
+
+Contact:
+ type: object
+ properties: 
+  name:
+   type: string
+  email:
+   type: string
+   format: email
+  phone:
+   type: string
+  address:
+   type: object
+    # schema omitted
+required: 
+ - name
+ - email
+
+Let’s quickly consider what happens when we make a field read-only and add it to the
+list of required fields. One might think that this is an impossible situation for input
+validation, but the OpenAPI specification has covered this. The required only applies
+to the response in this case
+
+Whenever fields are optional, a question arises: what does the absence of the field
+mean? We discussed this in the context of the OpenAPI specification itself, which
+says that, for example, the absence of readOnly means false. We can encode similar behavior in our OpenAPI definitions with the default keyword
+
+roles:
+ type: array 
+ minItems: 1 
+ uniqueItems: true 
+ items:
+ type: string 
+ enum: 
+ - PetOwner
+ - PetSitter
+ - Admin
+
+ Image 2 - 61.png
+
+ we will need two separate OpenAPI definitions—one
+for each version.
+
+
+The dominant standard for version strings is Semantic Versioning (or SemVer for
+short; https://semver.org/). The SemVer format communicates three core things:
+breaking changes (major changes), added features (minor changes), and bug or security fixes (patch changes). This is done with three numbers in the following format:
+<Major>.<Minor>.<Patch
+
+Image 2 - 62.png
+
+With this approach, we have a way to version the operation by using the version
+query parameter, but we still need to tell the consumers about this novel approach.
+There is a better (more semantic) way of doing this—one that can use OpenAPI’s
+structure and HTTP semantics to better communicate this. We can use custom
+media types.
+ We introduced media types in chapter 5 and mostly used the JSON media type
+(application/json), but we’ve also seen more specific media types (like application/
+problem+json). We can also define our own custom media types that follow the format
+application/vnd.some.cool.example+json—anything between the vnd. and +json
+is available for us to use. API consumers can ask for content to be returned in a specific format with the Accept header, whose value is a standard or custom media type.
+Using Accept is a nifty way for consumers to request specific versions of a schema. The
+complement of Accept is Content-Type, which is where the producer will put the actual
+version of the schema. To version our schema, we could create a media type like this:
+application/vnd.petsitter.v1+json. Here we specify the vendor name petsitter
+and the version v1.
+
+Image 2 - 63.png
+
+Deprecated keyword in use
+
+Image 2 - 64.png
+
+Going from an array to an object is a breaking change. However, going from an object
+with just the items field to an object with items, cursor, and total fields isn’t,
+because API consumers can still read the items and ignore the total field
+
+We’ll take a look at two different styles of testing and how they work
+together to form a testing strategy. The two styles are unit testing and end-to-end (e2e)
+testing.
+
+With unit tests, we are testing that the code works the way we expect it to for each
+operation. However, unit tests don’t capture what happens when all the units are composed together. For that, we need to do end-to-end testing. This tests the entire application, much like our consumers will.
+ The first and most straightforward way to test the API is to sit down and use it as
+your users would. Fortunately, HTTP APIs are incredibly standardized, and most (if
+not all) HTTP clients have the same behavior. That means you can test it with any
+HTTP client. Sit down, grab your favorite API client (such as curl, Postman, or Swagger UI) and make some requests against the API
+
+ Strest is an open source tool (https://github.com/eykrehbein/strest). It consumes
+a YAML file that describes a series of API requests to make, and then it asserts that the responses are correct
+
+Image 2 - 65.png
+
+other javascript based automated and GUI test frameworks are
+
+- Postman’s Newman—https://github.com/postmanlabs/newman
+- ReadyAPI’s TestEngine—https://github.com/SmartBear/testengine-cl
+
+All documentation points needed to be documented
+
+Image 2 - 66.png
+
+security measures
+
+ Here are a few pointers:
+- Ensure that your API has access control measures, and run tests that verify that
+they prevent unauthorized users from doing things they shouldn’t.
+- Denial of service (DDoS) attacks can be mitigated with a web application firewall (WAF) or some other protection at the edge of your system.
+- Keep your development and staging environments secure. There have been recent
+attacks and several large breaches because of insecure dev/stage environments.
+- Avoid leaking information in your error responses (see the sidebar on 404 vs.
+403 status codes). Definitely avoid stack traces in your errors, as they tell a lot
+about the type of code you’re running.
+
+also look at OWASP to get the most important security items
+
+ API monitoring tools basically ping your website at one or more endpoints, and
+they will send you an email or message as soon as the website stops responding, or if it
+responds with an error. PagerDuty (www.pagerduty.com) and AlertSite (https://smartbear.com/product/alertsite/overview/) are two such tools. You’ll also find an article
+titled “14 Best API Monitoring Tools for Your Business” that lists some other options
+here: https://geekflare.com/api-monitoring-tools/
+
