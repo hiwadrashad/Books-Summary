@@ -1,4 +1,4 @@
-page: 401
+page: FINISHED
 
 1
 ==============
@@ -1279,3 +1279,110 @@ responds with an error. PagerDuty (www.pagerduty.com) and AlertSite (https://sma
 titled “14 Best API Monitoring Tools for Your Business” that lists some other options
 here: https://geekflare.com/api-monitoring-tools/
 
+openapi 2.0 example
+
+Image 2 - 67.png
+
+openapi change in servers
+
+Image 2 - 68.png
+
+Responses OpenAPI
+
+Image 2 - 69.png
+
+The bigge
+
+the biggest shift between OpenAPI 2.0 and 3.0 is going from produces, which was a
+keyword specifying what types of media the server would respond with (or produce), to
+defining a schema for each different media type in OAS 3.0.
+ A smaller innovation is the ability to use 4XX (uppercase X’s) as a way of describing
+an entire range of HTTP status codes: 400–499. You can do the same with the other
+ranges too (1XX, 2XX, 3XX, and 5XX).
+The structure of examples was changed as well. Instead of having a single example per media type, you can have any number of examples with arbitrary names in
+OAS 3.0
+
+Image 2 - 70.png
+
+For requests, OAS 2.0 has consumes as a complement to produces, and you describe
+request bodies inside the parameters keyword. OAS 3.0 moved that into requestBody,
+which ensures fewer complications, particularly around how OAS 2.0 supported two
+types of request bodies.
+ OAS 3.0 removed consumes to enable the addition of different schemas to each
+media type. We can think of examples where the XML and the JSON may be slightly
+different. Or we could even stretch the idea with having extended or minimal datasets
+based on mediaType, such as application/vnd.example.full+json vs. application/
+json, where full+json includes more metadata in the request. Using different media
+types for different content can get wild—the sky is the limit
+
+Image 2 - 71.png
+
+Using in: body in the preceding example applies for all request bodies other than
+application/x-www-form-data (form data) and application/multipart (think file
+uploads). For these types of requests, OAS 2.0 has in: formData and type: file.
+These are hairy and complicated—see the details in the spec here: https://designapis
+.com/oas/2.0#parameter-object. In short, you need to add application/x-wwwform-data and/or application/multipart to your consumes keyword, and then
+describe a parameter with in: formData. Fortunately it is now easier with OAS 3.x.
+
+OAS 3.0 introduced the components keyword, which is a way to reuse different components within the API definition. Before that, OAS 2.0 used several root-level keywords
+to hold those components: definitions (renamed to schemas), parameters, responses,
+and securityDefinitions. These were combined in the components keyword, along
+with several new keywords that previously weren’t around.
+ OAS 2.0 components:
+- definitions—Moved to components/schemas
+- responses—Moved to components/responses
+- parameters—Moved to components/parameters
+- securityDefinitions—Moved to components/securitySchemes
+OAS 3.0 components:
+- schemas (renamed from definitions)
+- responses
+- parameters
+- examples (new)
+- requestBodies (new)
+- headers
+- securitySchemes (derived from securityDefinitions
+
+Image 2 - 72.png
+
+OAS 2.0 doesn’t have any equivalents for anyOf or oneOf, so you’re out of luck if you
+need to describe those in OAS 2.0. You’ll need to upgrade to OAS 3+.
+ It is worth noting, however, that allOf is supported in OAS 2.0.
+
+ JSON Schema 2020-12
+This version of the JSON Schema spec adds quite a few cool new ideas to OpenAPI:
+- if, then, else—For validating schemas depending on whether some validation
+is true or not
+- $anchor, $id—For giving referenceable names to subschemas, which allows for
+more powerful uses of $ref
+- prefixItems, contains, minContains, maxContains, unevaluatedItems, uniqueItems—Additional constraints for working with arrays
+- dependentSchemas, propertyNames, patternProperties, unevaluatedProperties, minProperties, maxProperties—Additional constraints for working with objects
+- const—Like an enum of one value, for when a field can only ever be one value 
+
+JSON Schema 2020-12 offers the ability to extend itself via something called vocabularies. This is an advanced feature that may not be needed when describing most APIs,
+but it can be very powerful for large organizations or even whole industries (travel,
+banking, etc.). The idea is that you can add (or remove) keywords for schemas. If
+you’ve ever wanted to add a bespoke keyword to your schemas, this would be how you
+can do it. This doesn’t mean tooling will magically do what you want with new keywords, but vocabularies do offer the ability to at least add them to the language and
+validate that they meet certain criteria (like being a string, or matching a pattern).
+ An example given in the JSON Schema specification is adding a minDate, which
+could be useful for describing a minimum date for fields that have a date format.
+ A vocabulary consists of two parts: one specifies how to validate the definition, and
+the other provides the semantics of that keyword. Determining what needs to be done
+with the semantics is left up to authors and tool makers. JSON Schema itself is defined
+as a list of vocabularies: a Core schema that defines just enough to create vocabularies,
+and then a Validation vocabulary that includes all the goodies we’ve come to expect
+from JSON Schema.
+
+OAS 3.1 notably adds the following, which are carried over from OAS 3.0:
+- discriminator keyword
+- xml keyword
+- externalDocs keyword
+- example (singular) keyword (mostly for backward compatibility; it’s been deprecated in favor of JSON Schema’s examples
+
+ Webhooks
+Webhooks are a top-level item, similar to path operations. They are the reverse of
+operations—they describe requests that the server will make to your service. Webhooks are a useful and simple way to register for events from some service. They look
+incredibly similar to path operations.
+ The following example is taken from the OpenAPI GitHub repository.
+
+Image 2 - 73.png
